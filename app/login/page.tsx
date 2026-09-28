@@ -13,7 +13,24 @@ export default function LoginPage() {
   }
 
   const usuarioGuardado = localStorage.getItem("usuarioRegistrado");
+if (
+  correo === "admin@alturas.com" &&
+  password === "admin123"
+) {
+  const administrador = {
+    nombre: "Administrador",
+    correo: "admin@alturas.com",
+    password: "admin123",
+    rol: "admin",
+  };
 
+  localStorage.setItem("usuario", JSON.stringify(administrador));
+
+  alert("Bienvenido, Administrador.");
+
+  window.location.href = "/";
+  return;
+}
   if (!usuarioGuardado) {
     alert("No existe ninguna cuenta registrada.");
     return;

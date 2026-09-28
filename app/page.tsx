@@ -15,6 +15,7 @@ export default function Home() {
   tipo: "Almuerzo",
 });
 const [usuario, setUsuario] = useState("");
+const [rol, setRol] = useState("");
 
 useEffect(() => {
   const usuarioGuardado = localStorage.getItem("usuario");
@@ -22,6 +23,7 @@ useEffect(() => {
   if (usuarioGuardado) {
     const datos = JSON.parse(usuarioGuardado);
     setUsuario(datos.nombre);
+    setRol(datos.rol);
   }
 }, []);
 if (reservaConfirmada) {
@@ -78,7 +80,21 @@ if (reservaConfirmada) {
         </div>
 
         <button
-          onClick={() => setReservaConfirmada(false)}
+          onClick={() => {
+  setReservaConfirmada(false);
+  setMostrarReserva(false);
+
+  setFormData({
+    nombre: "",
+    telefono: "",
+    fecha: "",
+    hora: "",
+    personas: "",
+    tipo: "Almuerzo",
+  });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}}
           className="mt-8 rounded-lg bg-[#315c45] px-8 py-3 font-semibold text-white hover:bg-[#264936]"
         >
           Aceptar
@@ -136,6 +152,11 @@ if (reservaConfirmada) {
     <span className="text-sm font-semibold text-[#315c45]">
       Hola, {usuario}
     </span>
+    {rol === "admin" && (
+  <span className="rounded-lg bg-[#315c45] px-3 py-1 text-xs font-semibold text-white">
+    Administrador
+  </span>
+)}
 
     <button
       onClick={() => {
@@ -158,7 +179,38 @@ if (reservaConfirmada) {
 
         </div>
       </header>
+{rol === "admin" && (
+  <section className="bg-[#315c45] py-8">
+    <div className="mx-auto max-w-6xl px-6">
+      <div className="rounded-2xl bg-white p-6 shadow-lg">
+        <h2 className="text-2xl font-bold text-[#315c45]">
+          Panel de administración
+        </h2>
 
+        <p className="mt-2 text-[#2f2a24]">
+          Acceso exclusivo para el administrador.
+        </p>
+
+        <div className="mt-5 flex flex-wrap gap-4">
+         <button
+  onClick={() => {
+    window.location.href = "/admin";
+  }}
+  className="rounded-lg bg-[#315c45] px-5 py-3 font-semibold text-white hover:bg-[#264936]"
+>
+  Gestionar reservas
+</button>
+
+          <button
+            className="rounded-lg border border-[#315c45] px-5 py-3 font-semibold text-[#315c45] hover:bg-[#315c45] hover:text-white"
+          >
+            Gestionar usuarios
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+)}
 
       {/* HERO */}
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 md:grid-cols-2">
@@ -424,8 +476,20 @@ onChange={(e) =>
           </button>
 
           <button
-         onClick={() => {
-  setReservaConfirmada(true);
+        onClick={async () => {
+  const respuesta = await fetch("/api/reservas", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(formData),
+  });
+
+  if (respuesta.ok) {
+    setReservaConfirmada(true);
+  } else {
+    alert("Ocurrió un error al enviar la reservación.");
+  }
 }}
             className="rounded-lg bg-[#315c45] px-6 py-3 font-semibold text-white hover:bg-[#264936]"
           >

@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Alturas Reservas
 
-## Getting Started
+Sistema web de reservas para el restaurante/mirador **Las Alturas del Boquerón**.
 
-First, run the development server:
+## Integrante
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Gustavo Adolfo Navarro Martínez**
+- **Carnet:** NM181601
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Descripción del proyecto
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Alturas Reservas es una aplicación web desarrollada para facilitar la gestión de reservaciones.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+El sistema permite a los clientes registrarse, iniciar sesión y realizar reservaciones. También cuenta con un usuario administrador que puede consultar y gestionar las reservaciones y visualizar la información de los usuarios registrados.
 
-## Learn More
+## Tecnologías utilizadas
 
-To learn more about Next.js, take a look at the following resources:
+- React
+- Next.js
+- TypeScript
+- Tailwind CSS
+- JavaScript
+- API REST
+- LocalStorage
+- Git
+- GitHub
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Funcionalidades
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Cliente
 
-## Deploy on Vercel
+El usuario con rol **cliente** puede:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Registrarse en el sistema.
+- Iniciar sesión.
+- Visualizar la página principal.
+- Realizar reservaciones.
+- Enviar los datos de una reservación mediante la API REST.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Administrador
+
+El usuario con rol **admin** cuenta con permisos adicionales:
+
+- Acceder al panel de administración.
+- Consultar las reservaciones registradas.
+- Eliminar reservaciones.
+- Gestionar la información del usuario registrado.
+
+El acceso al panel de administración está restringido mediante la validación del rol del usuario.
+
+## Roles del sistema
+
+El sistema implementa dos roles diferenciados:
+
+- **cliente:** puede registrarse, iniciar sesión y realizar reservaciones.
+- **admin:** puede acceder al panel administrativo, consultar y eliminar reservaciones y gestionar usuarios.
+
+## Autenticación
+
+La autenticación se implementa mediante `localStorage` con fines académicos.
+
+El sistema almacena la información del usuario registrado y del usuario que actualmente ha iniciado sesión.
+
+Para diferenciar los permisos se utiliza el atributo:
+
+```text
+rol

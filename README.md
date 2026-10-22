@@ -7,6 +7,25 @@ Sistema web de reservas para el restaurante/mirador **Las Alturas del Boquerón*
 - **Gustavo Adolfo Navarro Martínez**
 - **Carnet:** NM181601
 
+## Etapa 3 – Avance 1: App móvil (Foro 1)
+
+| Entregable | Enlace |
+|---|---|
+| Video del avance | [Ver video en OneDrive](https://1drv.ms/v/c/5b529b9580d641c0/IQD1IuRPBJrrSoJrk2uAqA6QAZKKdWjcn-m1bpN1CGanxZ0?e=bi9zc1) |
+| Documento (PDF, APA 7) | [docs/DPS941_Etapa3_Avance1_NM181601.pdf](docs/DPS941_Etapa3_Avance1_NM181601.pdf) |
+| Código fuente de la app móvil | [movil/](movil/) (React Native + Expo) |
+| Mockups en Figma | [Alturas Reservas – mockups](https://www.figma.com/design/3tonEJ2ZBb598lqGJeahmz/Alturas-Reservas-mockups?node-id=0-1) |
+
+Para ejecutar la app móvil:
+
+```bash
+cd movil
+npm install
+npx expo start
+```
+
+Luego se escanea el código QR con la aplicación **Expo Go** (Android o iOS).
+
 ## Descripción del proyecto
 
 Alturas Reservas es una aplicación web desarrollada para facilitar la gestión de reservaciones.

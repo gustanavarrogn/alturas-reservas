@@ -5,6 +5,7 @@ import Pantalla from '../components/Pantalla';
 import Encabezado from '../components/Encabezado';
 import CampoTexto from '../components/CampoTexto';
 import Boton from '../components/Boton';
+import BotonGoogle from '../components/BotonGoogle';
 import { useAuth } from '../context/AuthContext';
 import { validarConfirmacion, validarContrasena, validarCorreo, validarNombre, validarTelefono } from '../logic/validaciones';
 import { AuthStackParams } from '../navigation/AppNavigator';
@@ -35,6 +36,7 @@ export default function RegistroScreen({ navigation }: Props) {
     const error = await registrarse({ nombre: datos.nombre, correo: datos.correo, telefono: datos.telefono, contrasena: datos.contrasena });
     setCargando(false);
     if (error) setErrores({ general: error });
+    // Al crear la cuenta Firebase inicia sesión y la app pasa a las pestañas principales.
   };
 
   return (
@@ -47,6 +49,7 @@ export default function RegistroScreen({ navigation }: Props) {
       <CampoTexto etiqueta="Confirmar contraseña" value={datos.confirmacion} onChangeText={cambiar('confirmacion')} secureTextEntry error={errores.confirmacion} />
       {errores.general ? <Text style={estilos.error}>{errores.general}</Text> : null}
       <Boton texto="CREAR CUENTA" onPress={enviar} cargando={cargando} />
+      <BotonGoogle onError={general => setErrores({ general })} />
       <Pressable onPress={() => navigation.goBack()}>
         <Text style={estilos.texto}>
           ¿Ya tienes cuenta? <Text style={estilos.enlace}>Iniciar sesión</Text>

@@ -1,67 +1,88 @@
-// Estado global de la sesión (Context API).
+// Estado global de la sesión (Context API) conectado a Firebase Authentication.
+// onAuthStateChanged restaura la sesión al abrir la app y el perfil se escucha en tiempo real.
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { almacenamiento, Usuario } from '../services/almacenamiento';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '../services/firebase';
+import { authService, DatosRegistro, mensajeError } from '../services/authService';
+import { Usuario } from '../services/tipos';
 
-type DatosRegistro = Omit<Usuario, 'rol'>;
+// Las acciones devuelven un mensaje de error o null si todo salió bien.
+type Resultado = Promise<string | null>;
 
 interface AuthValor {
   usuario: Usuario | null;
+  correoVerificado: boolean;
   cargando: boolean;
-  iniciarSesion: (correo: string, contrasena: string) => Promise<string | null>;
-  registrarse: (datos: DatosRegistro) => Promise<string | null>;
+  iniciarSesion: (correo: string, contrasena: string) => Resultado;
+  registrarse: (datos: DatosRegistro) => Resultado;
+  iniciarConGoogle: (idToken?: string) => Resultado;
+  recuperarContrasena: (correo: string) => Resultado;
+  reenviarVerificacion: () => Resultado;
+  actualizarPerfil: (datos: { nombre: string; telefono: string }) => Resultado;
   cerrarSesion: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValor | undefined>(undefined);
 
+async function intentar(accion: () => Promise<unknown>): Resultado {
+  try {
+    await accion();
+    return null;
+  } catch (e) {
+    return mensajeError(e);
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [cargando, setCargando] = useState(true);
 
-  // Al abrir la app se restaura la sesión guardada.
   useEffect(() => {
-    (async () => {
-      const correo = await almacenamiento.obtenerSesion();
-      if (correo) {
-        const usuarios = await almacenamiento.obtenerUsuarios();
-        setUsuario(usuarios.find(u => u.correo === correo) ?? null);
+    let dejarDeEscucharPerfil: (() => void) | undefined;
+    const dejarDeEscucharAuth = onAuthStateChanged(auth, user => {
+      dejarDeEscucharPerfil?.();
+      setFirebaseUser(user);
+      if (!user) {
+        setUsuario(null);
+        setCargando(false);
+        return;
       }
-      setCargando(false);
-    })();
+      // Recién registrado el documento puede tardar un instante; el snapshot avisa cuando exista.
+      dejarDeEscucharPerfil = authService.escucharPerfil(
+        user.uid,
+        perfil => {
+          setUsuario(perfil);
+          if (perfil) setCargando(false);
+        },
+        () => setCargando(false),
+      );
+      // Si en 8 s no aparece el perfil, se deja de mostrar la pantalla de carga.
+      setTimeout(() => setCargando(false), 8000);
+    });
+    return () => {
+      dejarDeEscucharPerfil?.();
+      dejarDeEscucharAuth();
+    };
   }, []);
 
-  const iniciarSesion = async (correo: string, contrasena: string) => {
-    const usuarios = await almacenamiento.obtenerUsuarios();
-    const encontrado = usuarios.find(u => u.correo === correo.trim().toLowerCase());
-    // Mismo mensaje en ambos casos para no revelar qué correos están registrados.
-    if (!encontrado || encontrado.contrasena !== contrasena) return 'Correo o contraseña incorrectos';
-    await almacenamiento.guardarSesion(encontrado.correo);
-    setUsuario(encontrado);
-    return null;
+  const valor: AuthValor = {
+    usuario,
+    correoVerificado: firebaseUser?.emailVerified ?? false,
+    cargando,
+    iniciarSesion: (correo, contrasena) => intentar(() => authService.iniciarSesion(correo, contrasena)),
+    registrarse: datos => intentar(() => authService.registrar(datos)),
+    iniciarConGoogle: idToken => intentar(() => authService.iniciarConGoogle(idToken)),
+    recuperarContrasena: correo => intentar(() => authService.recuperarContrasena(correo)),
+    reenviarVerificacion: () => intentar(authService.reenviarVerificacion),
+    actualizarPerfil: datos =>
+      usuario ? intentar(() => authService.actualizarPerfil(usuario.uid, datos)) : Promise.resolve('Debes iniciar sesión'),
+    cerrarSesion: async () => {
+      await authService.cerrarSesion();
+    },
   };
 
-  const registrarse = async (datos: DatosRegistro) => {
-    const usuarios = await almacenamiento.obtenerUsuarios();
-    const correo = datos.correo.trim().toLowerCase();
-    if (usuarios.some(u => u.correo === correo)) return 'Ya existe una cuenta con ese correo';
-    // Todo registro desde la app móvil crea un cliente; el admin solo entra por el panel web.
-    const nuevo: Usuario = { ...datos, correo, nombre: datos.nombre.trim(), rol: 'cliente' };
-    await almacenamiento.guardarUsuarios([...usuarios, nuevo]);
-    await almacenamiento.guardarSesion(correo);
-    setUsuario(nuevo);
-    return null;
-  };
-
-  const cerrarSesion = async () => {
-    await almacenamiento.borrarSesion();
-    setUsuario(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ usuario, cargando, iniciarSesion, registrarse, cerrarSesion }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

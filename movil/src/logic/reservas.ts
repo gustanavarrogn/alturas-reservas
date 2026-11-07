@@ -1,6 +1,6 @@
 // Capa de lógica: reglas de negocio de las reservas.
 import { MESAS, MAX_PERSONAS, Mesa } from '../data/mesas';
-import { Reserva } from '../services/almacenamiento';
+import { Reserva } from '../services/tipos';
 
 const DIAS_ANTICIPACION = 30;
 
@@ -33,17 +33,10 @@ export function formatoHora(hora: string): string {
   return `${String(h12).padStart(2, '0')}:${String(min).padStart(2, '0')} ${sufijo}`;
 }
 
-// Mesas ocupadas por reservas confirmadas en la misma fecha y hora.
-function mesasOcupadas(reservas: Reserva[], fecha: string, hora: string): Set<string> {
-  return new Set(
-    reservas.filter(r => r.estado === 'Confirmada' && r.fecha === fecha && r.hora === hora).map(r => r.mesa),
-  );
-}
-
 // Asigna la mesa libre más pequeña donde caben las personas,
 // para no ocupar una mesa de 6 con una pareja.
-export function buscarMesa(reservas: Reserva[], fecha: string, hora: string, personas: number): Mesa | null {
-  const ocupadas = mesasOcupadas(reservas, fecha, hora);
+// "ocupadas" viene de la colección ocupacion de Firestore para esa fecha y hora.
+export function buscarMesa(ocupadas: Set<string>, personas: number): Mesa | null {
   const candidatas = MESAS.filter(m => m.capacidad >= personas && !ocupadas.has(m.id)).sort(
     (a, b) => a.capacidad - b.capacidad,
   );
@@ -51,9 +44,10 @@ export function buscarMesa(reservas: Reserva[], fecha: string, hora: string, per
 }
 
 // Valida todas las reglas antes de confirmar. Devuelve un mensaje de error o null.
+// misReservas: reservas del usuario (para evitar dos reservas el mismo día).
 export function validarReserva(
-  reservas: Reserva[],
-  correo: string,
+  misReservas: Reserva[],
+  ocupadas: Set<string>,
   fecha: string,
   hora: string,
   personas: number,
@@ -70,10 +64,10 @@ export function validarReserva(
   const limite = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + DIAS_ANTICIPACION);
   if (inicio > limite) return `Solo se puede reservar con hasta ${DIAS_ANTICIPACION} días de anticipación`;
 
-  const duplicada = reservas.some(r => r.correo === correo && r.fecha === fecha && r.estado === 'Confirmada');
+  const duplicada = misReservas.some(r => r.fecha === fecha && r.estado === 'Confirmada');
   if (duplicada) return 'Ya tienes una reserva confirmada para ese día';
 
-  if (!buscarMesa(reservas, fecha, hora, personas)) return 'No hay mesas disponibles para esa fecha, hora y cantidad de personas';
+  if (!buscarMesa(ocupadas, personas)) return 'No hay mesas disponibles para esa fecha, hora y cantidad de personas';
   return null;
 }
 
@@ -96,4 +90,15 @@ export function esProxima(r: Reserva): boolean {
   const [a, m, d] = r.fecha.split('-').map(Number);
   const [h, min] = r.hora.split(':').map(Number);
   return r.estado === 'Confirmada' && new Date(a, m - 1, d, h, min).getTime() >= Date.now();
+}
+
+// Una reserva confirmada cuya fecha ya pasó se considera completada (visita realizada).
+export function esCompletada(r: Reserva): boolean {
+  return r.estado === 'Confirmada' && !esProxima(r);
+}
+
+export function formatoFechaHora(d: Date): string {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()} ${formatoHora(`${d.getHours()}:${d.getMinutes()}`)}`;
 }

@@ -1,6 +1,6 @@
 // Pantalla de reserva confirmada: replica la vista de confirmación de la versión web.
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Pantalla from '../components/Pantalla';
 import Tarjeta from '../components/Tarjeta';
@@ -23,9 +23,9 @@ export default function ConfirmacionScreen({ navigation, route }: Props) {
           <Text style={estilos.check}>✓</Text>
         </View>
         <Text style={estilos.titulo}>¡Reserva confirmada!</Text>
-        <Text style={estilos.texto}>Tu reserva ha sido registrada correctamente. Te esperamos en Las Alturas del Boquerón.</Text>
+        <Text style={estilos.texto}>Tu reserva quedó guardada en la nube. Te esperamos en Las Alturas del Boquerón.</Text>
       </Tarjeta>
-      {reserva ? <TarjetaReserva reserva={reserva} /> : null}
+      {reserva ? <TarjetaReserva reserva={reserva} detalle /> : <ActivityIndicator color={colores.primario} />}
       <Boton texto="VER MIS RESERVAS" onPress={() => navigation.navigate('MisReservas')} />
     </Pantalla>
   );

@@ -7,6 +7,34 @@ Sistema web de reservas para el restaurante/mirador **Las Alturas del Boquerón*
 - **Gustavo Adolfo Navarro Martínez**
 - **Carnet:** NM181601
 
+## Etapa 3 – Avance 2: Firebase en React Native (Foro 2)
+
+| Entregable | Enlace |
+|---|---|
+| Video del avance | _(pendiente: agregar enlace)_ |
+| Documento (PDF, APA 7) | _(pendiente: docs/DPS941_Etapa3_Avance2_NM181601.pdf)_ |
+| Código fuente de la app móvil | [movil/](movil/) (React Native + Expo + Firebase) |
+| Guía de configuración de Firebase | [movil/FIREBASE.md](movil/FIREBASE.md) |
+
+Qué cambió respecto al Foro 1:
+
+- **Firebase Authentication:** registro e inicio de sesión con correo y contraseña, inicio de sesión con **Google**, recuperación de contraseña por correo, verificación de correo y sesión persistente (AsyncStorage) al reabrir la app.
+- **Cloud Firestore:** el perfil (`usuarios/{uid}`) y las reservas (`reservas/{id}`) se guardan en la nube asociados al `uid` del usuario autenticado y se sincronizan en tiempo real con `onSnapshot`.
+- **Disponibilidad sin exponer datos ajenos:** la colección `ocupacion` guarda solo qué mesa está ocupada en cada fecha y hora; la reserva se crea con una **transacción** que elige la mesa libre más pequeña, así dos clientes no pueden tomar la misma mesa.
+- **Reglas de seguridad** ([movil/firestore.rules](movil/firestore.rules)): cada cliente solo lee y modifica su perfil y sus reservas; el rol no se puede cambiar desde la app y una reserva solo puede pasar de *Confirmada* a *Cancelada*.
+- **Módulos secundarios:** perfil editable (nombre y teléfono, guardados en Firestore), resumen de reservas, menú e inicio con la próxima reserva.
+- **Historial:** reservas próximas y pasadas con filtros (Todas / Completadas / Canceladas) y fecha de registro y cancelación.
+
+Para ejecutar la app móvil con Firebase:
+
+```bash
+cd movil
+npm install
+cp .env.example .env   # en Windows: copy .env.example .env  → pegar las claves de Firebase
+npx expo start -c      # Expo Go (correo y contraseña)
+npx expo start --web   # versión web (incluye inicio de sesión con Google)
+```
+
 ## Etapa 3 – Avance 1: App móvil (Foro 1)
 
 | Entregable | Enlace |

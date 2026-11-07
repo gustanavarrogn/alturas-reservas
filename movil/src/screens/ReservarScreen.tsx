@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import Pantalla from '../components/Pantalla';
@@ -7,8 +7,10 @@ import Selector from '../components/Selector';
 import Boton from '../components/Boton';
 import { useReservas } from '../context/ReservasContext';
 import { useAuth } from '../context/AuthContext';
+import { useOcupacion } from '../hooks/useOcupacion';
+import { avisar } from '../components/dialogo';
 import { HORAS, MAX_PERSONAS } from '../data/mesas';
-import { TIPOS_RESERVA, TipoReserva } from '../services/almacenamiento';
+import { TIPOS_RESERVA, TipoReserva } from '../services/tipos';
 import Encabezado from '../components/Encabezado';
 import Tarjeta from '../components/Tarjeta';
 import { buscarMesa, formatoHora, horaNoDisponible, proximosDias, validarReserva } from '../logic/reservas';
@@ -20,17 +22,19 @@ const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 export default function ReservarScreen({ navigation }: Props) {
   const { usuario } = useAuth();
-  const { todas, crearReserva } = useReservas();
+  const { misReservas, crearReserva } = useReservas();
   const dias = useMemo(() => proximosDias(14), []);
   const [fecha, setFecha] = useState(dias[0]);
   const [hora, setHora] = useState('');
   const [personas, setPersonas] = useState(2);
   const [tipo, setTipo] = useState<TipoReserva>('Almuerzo');
   const [guardando, setGuardando] = useState(false);
+  // Disponibilidad en tiempo real: si alguien reserva mientras se llena el formulario, se actualiza sola.
+  const { cargando: cargandoOcupacion, ocupadasEn } = useOcupacion(fecha);
 
   // La disponibilidad se recalcula cada vez que cambia la fecha, la hora o las personas.
-  const errorDisponibilidad = hora && usuario ? validarReserva(todas, usuario.correo, fecha, hora, personas) : null;
-  const mesa = hora ? buscarMesa(todas, fecha, hora, personas) : null;
+  const errorDisponibilidad = hora && usuario ? validarReserva(misReservas, ocupadasEn(hora), fecha, hora, personas) : null;
+  const mesa = hora ? buscarMesa(ocupadasEn(hora), personas) : null;
 
   const opcionesFecha = dias.map(d => {
     const [a, m, dia] = d.split('-').map(Number);
@@ -40,19 +44,19 @@ export default function ReservarScreen({ navigation }: Props) {
   const opcionesHora = HORAS.map(h => ({
     valor: h,
     etiqueta: formatoHora(h),
-    deshabilitada: horaNoDisponible(fecha, h) || !buscarMesa(todas, fecha, h, personas),
+    deshabilitada: horaNoDisponible(fecha, h) || !buscarMesa(ocupadasEn(h), personas),
   }));
 
   const confirmar = async () => {
     setGuardando(true);
-    const { error, reserva } = await crearReserva(fecha, hora, personas, tipo);
+    const { error, id } = await crearReserva(fecha, hora, personas, tipo, ocupadasEn(hora));
     setGuardando(false);
-    if (error || !reserva) {
-      Alert.alert('No se pudo reservar', error ?? 'Intenta de nuevo');
+    if (error || !id) {
+      avisar('No se pudo reservar', error ?? 'Intenta de nuevo');
       return;
     }
     // replace: el usuario no puede volver atrás al formulario ya enviado.
-    navigation.replace('Confirmacion', { id: reserva.id });
+    navigation.replace('Confirmacion', { id });
   };
 
   return (
@@ -81,7 +85,9 @@ export default function ReservarScreen({ navigation }: Props) {
 
       <Text style={estilos.etiqueta}>Disponibilidad</Text>
       <View style={estilos.disponibilidad}>
-        {!hora ? (
+        {cargandoOcupacion ? (
+          <ActivityIndicator color={colores.primario} />
+        ) : !hora ? (
           <Text style={estilos.textoSuave}>Selecciona una hora para consultar disponibilidad</Text>
         ) : errorDisponibilidad ? (
           <Text style={{ color: colores.error }}>✕ {errorDisponibilidad}</Text>

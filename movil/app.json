@@ -23,6 +23,10 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "alturasreservas"
+    "scheme": "alturasreservas",
+    "plugins": [
+      "expo-status-bar",
+      "expo-web-browser"
+    ]
   }
 }

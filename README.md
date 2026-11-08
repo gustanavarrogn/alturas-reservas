@@ -11,8 +11,8 @@ Sistema web de reservas para el restaurante/mirador **Las Alturas del Boquerón*
 
 | Entregable | Enlace |
 |---|---|
-| Video del avance | _(pendiente: agregar enlace)_ |
-| Documento (PDF, APA 7) | _(pendiente: docs/DPS941_Etapa3_Avance2_NM181601.pdf)_ |
+| Video del avance | [Ver video en OneDrive](https://1drv.ms/v/c/5b529b9580d641c0/IQBG7hV7OoLDS4we70xm_nFIAdRAPjEyjkCzOECGYf_R80E?e=77PBMI) |
+| Documento (PDF, APA 7) | [docs/DPS941_Etapa3_Avance2_NM181601.pdf](docs/DPS941_Etapa3_Avance2_NM181601.pdf) |
 | Código fuente de la app móvil | [movil/](movil/) (React Native + Expo + Firebase) |
 | Guía de configuración de Firebase | [movil/FIREBASE.md](movil/FIREBASE.md) |
 
